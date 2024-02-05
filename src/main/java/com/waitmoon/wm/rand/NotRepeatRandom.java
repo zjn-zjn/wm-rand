@@ -1,35 +1,24 @@
 package com.waitmoon.wm.rand;
 
-
 import java.math.BigInteger;
 import java.util.concurrent.ThreadLocalRandom;
 
 public final class NotRepeatRandom {
-    // left inclusive
-    private final long l;
-    // right inclusive
-    private final long r;
-    // clockwise current value
-    private long cw;
-    // counter clockwise current value
-    private long ccw;
-    // step
+    private final long l;  // left inclusive
+    private final long r;  // right inclusive
+    private long cw;  // clockwise current value
+    private long ccw; // counter clockwise current value
     private long step;
     private ThreadLocalRandom random;
-    // fill right to prime
-    private long fr;
-    // total
-    private long t;
-    // size
-    private final long s;
-
+    private long fr; // fill right to prime
+    private long t; // total
+    private final long s; // size
     /**
      * @param r [0,r]
      */
     public NotRepeatRandom(long r) {
         this(0, r, 200);
     }
-
     /**
      * @param l left inclusive
      * @param r right inclusive
@@ -37,7 +26,6 @@ public final class NotRepeatRandom {
     public NotRepeatRandom(long l, long r) {
         this(l, r, 200);
     }
-
     public void refresh() {
         random = ThreadLocalRandom.current();
         this.step = random.nextLong(1, ((fr - l) / 2 + 1));
@@ -51,7 +39,6 @@ public final class NotRepeatRandom {
         this.ccw = (cw - step) < l ? fr + cw - step - l + 1 : cw - step;
         this.t = 0;
     }
-
     /**
      * @param l         left inclusive
      * @param r         right inclusive
@@ -80,7 +67,6 @@ public final class NotRepeatRandom {
         this.cw = random.nextLong(l, fr);
         this.ccw = (cw - step) < l ? fr + cw - step - l + 1 : cw - step;
     }
-
     /**
      * @return next value
      */
