@@ -114,16 +114,15 @@ public final class WmRandom {
                 return m - (v - m) - f;
             }
             return m + (m - v) - f;
-        } else {
-            if (v > ms) {
-                return v;
-            }
-            int f = (ms - l + 1) % 2 == 0 ? 1 : 0;
-            long m = l + (ms - l) / 2 + f;
-            if (v < m) {
-                return m - (v - m) - f;
-            }
-            return m + (m - v) - f;
         }
+        if (v > ms) {
+            return v;
+        }
+        int f = (ms - l + 1) % 2 == 0 ? 1 : 0;
+        long m = l + (ms - l) / 2 + f;
+        if (v < m) {
+            return m - (v - m) - f;
+        }
+        return m + (m - v) - f;
     }
 }
