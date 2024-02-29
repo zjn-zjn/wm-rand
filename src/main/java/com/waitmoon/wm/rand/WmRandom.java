@@ -3,7 +3,7 @@ package com.waitmoon.wm.rand;
 import java.math.BigInteger;
 import java.util.concurrent.ThreadLocalRandom;
 
-public final class NotRepeatRandom {
+public final class WmRandom {
     private final long l;  // left inclusive
     private final long r;  // right inclusive
     private long cw;  // clockwise current value
@@ -13,19 +13,24 @@ public final class NotRepeatRandom {
     private long fr; // fill right to prime
     private long t; // total
     private final long s; // size
+    private long ms; //mobius strip position
+    private boolean d; //direction
+
     /**
      * @param r [0,r]
      */
-    public NotRepeatRandom(long r) {
+    public WmRandom(long r) {
         this(0, r, 200);
     }
+
     /**
      * @param l left inclusive
      * @param r right inclusive
      */
-    public NotRepeatRandom(long l, long r) {
+    public WmRandom(long l, long r) {
         this(l, r, 200);
     }
+
     public void refresh() {
         random = ThreadLocalRandom.current();
         this.step = random.nextLong(1, ((fr - l) / 2 + 1));
@@ -38,14 +43,17 @@ public final class NotRepeatRandom {
         this.cw = random.nextLong(l, fr);
         this.ccw = (cw - step) < l ? fr + cw - step - l + 1 : cw - step;
         this.t = 0;
+        this.ms = random.nextLong(l, r);
+        this.d = random.nextBoolean();
     }
+
     /**
      * @param l         left inclusive
      * @param r         right inclusive
      * @param certainty certainty of prime
      */
-    public NotRepeatRandom(long l, long r, int certainty) {
-        if (l < 0 || r <= 0 || l >= r) {
+    public WmRandom(long l, long r, int certainty) {
+        if (l >= r) {
             throw new IllegalArgumentException("origin must be non-negative and bound must be positive and origin must be less than bound");
         }
         this.s = r - l + 1;
@@ -66,7 +74,10 @@ public final class NotRepeatRandom {
         }
         this.cw = random.nextLong(l, fr);
         this.ccw = (cw - step) < l ? fr + cw - step - l + 1 : cw - step;
+        this.ms = random.nextLong(l, r);
+        this.d = random.nextBoolean();
     }
+
     /**
      * @return next value
      */
@@ -93,6 +104,26 @@ public final class NotRepeatRandom {
             ccw = ccw - step < l ? fr + ccw - step - l + 1 : ccw - step;
         }
         t++;
-        return v;
+        if (d) {
+            if (v <= ms) {
+                return v;
+            }
+            long m = ms + (r - ms) / 2 + 1;
+            int f = (r - ms) % 2 == 0 ? 1 : 0;
+            if (v > m) {
+                return m - (v - m) - f;
+            }
+            return m + (m - v) - f;
+        } else {
+            if (v > ms) {
+                return v;
+            }
+            int f = (ms - l + 1) % 2 == 0 ? 1 : 0;
+            long m = l + (ms - l) / 2 + f;
+            if (v < m) {
+                return m - (v - m) - f;
+            }
+            return m + (m - v) - f;
+        }
     }
 }
