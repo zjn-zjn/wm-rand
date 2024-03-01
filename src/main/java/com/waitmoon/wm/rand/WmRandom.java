@@ -43,6 +43,7 @@ public final class WmRandom {
             if (fr <= l) {
                 throw new IllegalArgumentException("fillBound illegal");
             }
+            this.ns = fr - l;
             this.cw = random.nextLong(l, fr);
             long i = cw - step;
             this.ccw = i < l ? ns + i + 1L : i;
@@ -78,6 +79,7 @@ public final class WmRandom {
         if (fr <= l) {
             throw new IllegalArgumentException("fillBound illegal");
         }
+        this.ns = fr - l;
         this.cw = random.nextLong(l, fr);
         long i = cw - step;
         this.ccw = i < l ? ns + i + 1L : i;
