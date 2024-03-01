@@ -98,7 +98,7 @@ public final class WmRandom {
         } else {
             v = ccw;
             if (ccw > r) {
-                long g = ccw - r - 1;
+                long g = ccw - r - 1L;
                 ccw = ccw - g + g % step;
                 ccw = ccw - step < l ? fr + ccw - step - l + 1L : ccw - step;
                 v = ccw;
