@@ -33,15 +33,15 @@ public final class WmRandom {
 
     public void refresh() {
         random = ThreadLocalRandom.current();
-        this.step = random.nextLong(1, ((fr - l) / 2 + 1));
-        while (step != 1 && (fr - l + 1) % step == 0) {
-            this.fr = BigInteger.valueOf(fr - l + 1).nextProbablePrime().longValue() + l - 1;
+        this.step = random.nextLong(1L, (((fr - l) >> 1) + 1L));
+        while (step != 1L && (fr - l + 1L) % step == 0) {
+            this.fr = BigInteger.valueOf(fr - l + 1L).nextProbablePrime().longValue() + l - 1L;
         }
         if (fr <= l) {
             throw new IllegalArgumentException("fillBound illegal");
         }
         this.cw = random.nextLong(l, fr);
-        this.ccw = (cw - step) < l ? fr + cw - step - l + 1 : cw - step;
+        this.ccw = (cw - step) < l ? fr + cw - step - l + 1L : cw - step;
         this.t = 0;
         this.ms = random.nextLong(l, r);
         this.d = random.nextBoolean();
@@ -56,24 +56,24 @@ public final class WmRandom {
         if (l >= r) {
             throw new IllegalArgumentException("origin must be non-negative and bound must be positive and origin must be less than bound");
         }
-        this.s = r - l + 1;
+        this.s = r - l + 1L;
         this.l = l;
         this.r = r;
         if (BigInteger.valueOf(s).isProbablePrime(certainty)) {
             this.fr = r;
         } else {
-            this.fr = BigInteger.valueOf(s).nextProbablePrime().longValue() + l - 1;
+            this.fr = BigInteger.valueOf(s).nextProbablePrime().longValue() + l - 1L;
         }
         random = ThreadLocalRandom.current();
-        this.step = random.nextLong(1, ((fr - l) / 2 + 1));
-        while (step != 1 && (fr - l + 1) % step == 0) {
-            this.fr = BigInteger.valueOf(fr - l + 1).nextProbablePrime().longValue() + l - 1;
+        this.step = random.nextLong(1L, (((fr - l) >> 1) + 1L));
+        while (step != 1 && (fr - l + 1L) % step == 0) {
+            this.fr = BigInteger.valueOf(fr - l + 1L).nextProbablePrime().longValue() + l - 1L;
         }
         if (fr <= l) {
             throw new IllegalArgumentException("fillBound illegal");
         }
         this.cw = random.nextLong(l, fr);
-        this.ccw = (cw - step) < l ? fr + cw - step - l + 1 : cw - step;
+        this.ccw = (cw - step) < l ? fr + cw - step - l + 1L : cw - step;
         this.ms = random.nextLong(l, r);
         this.d = random.nextBoolean();
     }
@@ -89,40 +89,36 @@ public final class WmRandom {
         if (random.nextBoolean()) {
             v = cw;
             if (cw > r) {
-                cw = cw + (((fr - cw) / step) * step);
-                cw = cw + step > fr ? cw + step + l - fr - 1 : cw + step;
+                long g = fr - cw;
+                cw = cw + g - g % step;
+                cw = cw + step > fr ? cw + step + l - fr - 1L : cw + step;
                 v = cw;
             }
-            cw = cw + step > fr ? cw + step + l - fr - 1 : cw + step;
+            cw = cw + step > fr ? cw + step + l - fr - 1L : cw + step;
         } else {
             v = ccw;
             if (ccw > r) {
-                ccw = ccw - (((ccw - r - 1) / step) * step);
-                ccw = ccw - step < l ? fr + ccw - step - l + 1 : ccw - step;
+                long g = ccw - r - 1;
+                ccw = ccw - g + g % step;
+                ccw = ccw - step < l ? fr + ccw - step - l + 1L : ccw - step;
                 v = ccw;
             }
-            ccw = ccw - step < l ? fr + ccw - step - l + 1 : ccw - step;
+            ccw = ccw - step < l ? fr + ccw - step - l + 1L : ccw - step;
         }
         t++;
         if (d) {
             if (v <= ms) {
                 return v;
             }
-            long m = ms + (r - ms) / 2 + 1;
-            int f = (r - ms) % 2 == 0 ? 1 : 0;
-            if (v > m) {
-                return m - (v - m) - f;
-            }
-            return m + (m - v) - f;
+            long m = ms + ((r - ms) >> 1) + 1L;
+            long f = ((r - ms) & 1) == 0 ? 1L : 0L;
+            return m - v - f + m;
         }
         if (v > ms) {
             return v;
         }
-        int f = (ms - l + 1) % 2 == 0 ? 1 : 0;
-        long m = l + (ms - l) / 2 + f;
-        if (v < m) {
-            return m - (v - m) - f;
-        }
-        return m + (m - v) - f;
+        long f = ((ms - l + 1L) & 1) == 0 ? 1L : 0L;
+        long m = l + ((ms - l) >> 1) + f;
+        return m - v - f + m;
     }
 }
