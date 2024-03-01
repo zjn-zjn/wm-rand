@@ -4,17 +4,18 @@ import java.math.BigInteger;
 import java.util.concurrent.ThreadLocalRandom;
 
 public final class WmRandom {
-    private final long l;  // left inclusive
-    private final long r;  // right inclusive
-    private long cw;  // clockwise current value
-    private long ccw; // counter clockwise current value
+    private final long l;
+    private final long r;
+    private long cw;
+    private long ccw;
     private long step;
     private ThreadLocalRandom random;
-    private long fr; // fill right to prime
-    private long t; // total
-    private final long s; // size
-    private long ms; //mobius strip position
-    private boolean d; //direction
+    private long fr;
+    private long t;
+    private final long s;
+    private long ms;
+    private boolean d;
+    private long ns;
 
     /**
      * @param r [0,r]
@@ -31,20 +32,24 @@ public final class WmRandom {
         this(l, r, 200);
     }
 
-    public void refresh() {
-        random = ThreadLocalRandom.current();
-        this.step = random.nextLong(1L, (((fr - l) >> 1) + 1L));
-        while (step != 1L && (fr - l + 1L) % step == 0) {
-            this.fr = BigInteger.valueOf(fr - l + 1L).nextProbablePrime().longValue() + l - 1L;
+    public void reset() {
+        synchronized (this) {
+            random = ThreadLocalRandom.current();
+            this.ns = fr - l;
+            this.step = random.nextLong(1L, (ns >> 1) + 1L);
+            while (step != 1L && (ns + 1L) % step == 0) {
+                this.fr = BigInteger.valueOf(ns + 1L).nextProbablePrime().longValue() + l - 1L;
+            }
+            if (fr <= l) {
+                throw new IllegalArgumentException("fillBound illegal");
+            }
+            this.cw = random.nextLong(l, fr);
+            long i = cw - step;
+            this.ccw = i < l ? ns + i + 1L : i;
+            this.t = 0;
+            this.ms = random.nextLong(l, r);
+            this.d = random.nextBoolean();
         }
-        if (fr <= l) {
-            throw new IllegalArgumentException("fillBound illegal");
-        }
-        this.cw = random.nextLong(l, fr);
-        this.ccw = (cw - step) < l ? fr + cw - step - l + 1L : cw - step;
-        this.t = 0;
-        this.ms = random.nextLong(l, r);
-        this.d = random.nextBoolean();
     }
 
     /**
@@ -65,15 +70,17 @@ public final class WmRandom {
             this.fr = BigInteger.valueOf(s).nextProbablePrime().longValue() + l - 1L;
         }
         random = ThreadLocalRandom.current();
-        this.step = random.nextLong(1L, (((fr - l) >> 1) + 1L));
-        while (step != 1 && (fr - l + 1L) % step == 0) {
-            this.fr = BigInteger.valueOf(fr - l + 1L).nextProbablePrime().longValue() + l - 1L;
+        this.ns = fr - l;
+        this.step = random.nextLong(1L, (ns >> 1) + 1L);
+        while (step != 1 && (ns + 1L) % step == 0) {
+            this.fr = BigInteger.valueOf(ns + 1L).nextProbablePrime().longValue() + l - 1L;
         }
         if (fr <= l) {
             throw new IllegalArgumentException("fillBound illegal");
         }
         this.cw = random.nextLong(l, fr);
-        this.ccw = (cw - step) < l ? fr + cw - step - l + 1L : cw - step;
+        long i = cw - step;
+        this.ccw = i < l ? ns + i + 1L : i;
         this.ms = random.nextLong(l, r);
         this.d = random.nextBoolean();
     }
@@ -82,36 +89,47 @@ public final class WmRandom {
      * @return next value
      */
     public long next() {
-        if (t >= s) {
-            throw new IllegalStateException("exhausted all possible values");
-        }
         long v;
-        if (random.nextBoolean()) {
-            v = cw;
-            if (cw > r) {
-                long g = fr - cw;
-                cw = cw + g - g % step;
-                cw = cw + step > fr ? cw + step + l - fr - 1L : cw + step;
+        long ms;
+        boolean d;
+        synchronized (this) {
+            if (t >= s) {
+                throw new IllegalStateException("exhausted all possible values");
+            }
+            d = this.d;
+            ms = this.ms;
+            long i;
+            if (random.nextBoolean()) {
                 v = cw;
-            }
-            cw = cw + step > fr ? cw + step + l - fr - 1L : cw + step;
-        } else {
-            v = ccw;
-            if (ccw > r) {
-                long g = ccw - r - 1L;
-                ccw = ccw - g + g % step;
-                ccw = ccw - step < l ? fr + ccw - step - l + 1L : ccw - step;
+                if (cw > r) {
+                    long g = fr - cw;
+                    cw = cw + g - g % step;
+                    i = cw + step;
+                    cw = i > fr ? i - ns - 1L : i;
+                    v = cw;
+                }
+                i = cw + step;
+                cw = i > fr ? i - ns - 1L : i;
+            } else {
                 v = ccw;
+                if (ccw > r) {
+                    long g = ccw - r - 1L;
+                    ccw = ccw - g + g % step;
+                    i = ccw - step;
+                    ccw = i < l ? ns + i + 1L : i;
+                    v = ccw;
+                }
+                i = ccw - step;
+                ccw = i < l ? ns + i + 1L : i;
             }
-            ccw = ccw - step < l ? fr + ccw - step - l + 1L : ccw - step;
+            t++;
         }
-        t++;
         if (d) {
             if (v <= ms) {
                 return v;
             }
-            long m = ms + ((r - ms) >> 1) + 1L;
             long f = ((r - ms) & 1) == 0 ? 1L : 0L;
+            long m = ms + ((r - ms) >> 1) + 1L;
             return m - v - f + m;
         }
         if (v > ms) {
