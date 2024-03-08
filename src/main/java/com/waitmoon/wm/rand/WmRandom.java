@@ -39,11 +39,11 @@ public final class WmRandom {
             this.step = random.nextLong(1L, (ns >> 1) + 1L);
             while (step != 1L && (ns + 1L) % step == 0) {
                 this.fr = BigInteger.valueOf(ns + 1L).nextProbablePrime().longValue() + l - 1L;
+                this.ns = fr - l;
             }
             if (fr <= l) {
                 throw new IllegalArgumentException("fillBound illegal");
             }
-            this.ns = fr - l;
             this.cw = random.nextLong(l, fr);
             long i = cw - step;
             this.ccw = i < l ? ns + i + 1L : i;
@@ -75,11 +75,11 @@ public final class WmRandom {
         this.step = random.nextLong(1L, (ns >> 1) + 1L);
         while (step != 1 && (ns + 1L) % step == 0) {
             this.fr = BigInteger.valueOf(ns + 1L).nextProbablePrime().longValue() + l - 1L;
+            this.ns = fr - l;
         }
         if (fr <= l) {
             throw new IllegalArgumentException("fillBound illegal");
         }
-        this.ns = fr - l;
         this.cw = random.nextLong(l, fr);
         long i = cw - step;
         this.ccw = i < l ? ns + i + 1L : i;
